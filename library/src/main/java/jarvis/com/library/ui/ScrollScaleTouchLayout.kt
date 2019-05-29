@@ -184,9 +184,9 @@ open class ScrollScaleTouchLayout: FrameLayout {
             MotionEvent.ACTION_MOVE -> {
                 val deltaX = focusX - mLastFocusX
                 val deltaY = focusY - mLastFocusY
-//                if (isMoveAction(deltaX, deltaY)) {
+                if (isMoveAction(deltaX, deltaY)) {
                     onScrollBy(deltaX, deltaY)
-//                }
+                }
                 mLastFocusX = focusX
                 mLastFocusY = focusY
                 return true
