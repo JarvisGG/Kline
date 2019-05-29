@@ -37,12 +37,6 @@ open class ScrollScaleTouchLayout: FrameLayout {
 
     private val viewConfiguration by lazy { ViewConfiguration.get(context) }
 
-    val Number.px: Int get() = (toInt() * Resources.getSystem().displayMetrics.density.toInt())
-    val Number.dp: Int get() = (toInt() / Resources.getSystem().displayMetrics.density.toInt())
-
-    protected var screenWidth = Resources.getSystem().displayMetrics.widthPixels
-    protected var screenHeight = Resources.getSystem().displayMetrics.heightPixels
-
     protected lateinit var originRect: Rect
 
     private var mLastFocusX: Float = 0.toFloat()
@@ -50,10 +44,6 @@ open class ScrollScaleTouchLayout: FrameLayout {
     private var mDownFocusX: Float = 0.toFloat()
     private var mDownFocusY: Float = 0.toFloat()
 
-    private var mScrollX = 0
-    private var mScrollY = 0
-
-    protected var mScaleFactor = 1F
     private var mScaleMax = 2f
     private var mScaleMin = 1f
 
@@ -184,9 +174,9 @@ open class ScrollScaleTouchLayout: FrameLayout {
             MotionEvent.ACTION_MOVE -> {
                 val deltaX = focusX - mLastFocusX
                 val deltaY = focusY - mLastFocusY
-                if (isMoveAction(deltaX, deltaY)) {
+//                if (isMoveAction(deltaX, deltaY)) {
                     onScrollBy(deltaX, deltaY)
-                }
+//                }
                 mLastFocusX = focusX
                 mLastFocusY = focusY
                 return true
@@ -226,7 +216,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
         Math.sqrt((dx * dx + dy * dy).toDouble()) > viewConfiguration.scaledTouchSlop
     }
 
-    fun onScrollBy(dx: Float, dy: Float) {
+    private fun onScrollBy(dx: Float, dy: Float) {
         var x = dx
         var y = dy
         val rectF = getMatrixRectF()
@@ -308,7 +298,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
     }
 
     private fun getMatrixRectF(): RectF {
-        var rect = RectF()
+        val rect = RectF()
         rect.set(0f, 0f, width.toFloat(), height.toFloat())
         mMatrix.mapRect(rect)
         return rect

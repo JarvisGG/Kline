@@ -15,6 +15,12 @@ import jarvis.com.library.R
  */
 class KLineCharView: ScrollScaleTouchLayout {
 
+    private var screenWidth = Resources.getSystem().displayMetrics.widthPixels
+    private var screenHeight = Resources.getSystem().displayMetrics.heightPixels
+
+    val Number.px: Int get() = (toInt() * Resources.getSystem().displayMetrics.density.toInt())
+    val Number.dp: Int get() = (toInt() / Resources.getSystem().displayMetrics.density.toInt())
+
     private var linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         strokeWidth = 1.toFloat()
         color = resources.getColor(R.color.chart_white)
