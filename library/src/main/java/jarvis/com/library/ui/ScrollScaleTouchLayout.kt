@@ -1,14 +1,16 @@
 package jarvis.com.library.ui
 
+import android.animation.ValueAnimator
 import android.content.Context
-import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.RectF
 import android.support.annotation.IntDef
 import android.util.AttributeSet
+import android.util.Log
 import android.view.*
+import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import kotlin.annotation.Retention
 
@@ -44,7 +46,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
     private var mDownFocusX: Float = 0.toFloat()
     private var mDownFocusY: Float = 0.toFloat()
 
-    private var mScaleMax = 2f
+    private var mScaleMax = 4f
     private var mScaleMin = 1f
 
     private var mMatrix = Matrix()
@@ -76,20 +78,13 @@ open class ScrollScaleTouchLayout: FrameLayout {
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
-
-        visibility = INVISIBLE
-        setLayerType(View.LAYER_TYPE_HARDWARE, null)
+        Log.e("onDraw", "-------------> done")
         canvas?.concat(mMatrix)
-        setLayerType(View.LAYER_TYPE_NONE, null)
-        visibility = VISIBLE
-
-
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         originRect.set(0, 0, width, height)
-
     }
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
@@ -195,7 +190,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
 
                     if (Math.abs(xVelocity) > viewConfiguration.scaledMinimumFlingVelocity
                             || Math.abs(yVelocity) > viewConfiguration.scaledMinimumFlingVelocity) {
-                        invalidate()
+                        onFling(xVelocity, yVelocity)
                     }
                 }
                 return true
@@ -232,6 +227,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
         }
         mMatrix.postTranslate(x, y)
         checkBorderWhenTranslate()
+        invalidate()
     }
 
     private fun checkBorderWhenTranslate() {
@@ -267,6 +263,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
             }
             mMatrix.postScale(scaleFactor, scaleFactor, detector.focusX, detector.focusY)
             checkBorderAndCenterWhenScale()
+            invalidate()
         }
     }
 
@@ -297,13 +294,6 @@ open class ScrollScaleTouchLayout: FrameLayout {
         mMatrix.postTranslate(deltaX, deltaY)
     }
 
-    private fun getMatrixRectF(): RectF {
-        val rect = RectF()
-        rect.set(0f, 0f, width.toFloat(), height.toFloat())
-        mMatrix.mapRect(rect)
-        return rect
-    }
-
     private fun getScale(): Float {
         val values = FloatArray(9)
         mMatrix.getValues(values)
@@ -314,6 +304,36 @@ open class ScrollScaleTouchLayout: FrameLayout {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
             onScaleChange(detector)
             return true
+        }
+    }
+
+    private fun getMatrixRectF(): RectF {
+        val rect = RectF()
+        rect.set(0f, 0f, width.toFloat(), height.toFloat())
+        mMatrix.mapRect(rect)
+        return rect
+    }
+
+    private fun onFling(velocityX: Float, velocityY: Float) {
+        val scaledDistanceX = velocityX / viewConfiguration.scaledMaximumFlingVelocity * (width * getScale())
+        val scaledDistanceY = velocityY / viewConfiguration.scaledMaximumFlingVelocity * (height * getScale())
+        val total = Math.sqrt(Math.pow(scaledDistanceX.toDouble(), 2.0) + Math.pow(scaledDistanceY.toDouble(), 2.0))
+        scrollFling(scaledDistanceX, scaledDistanceY, Math.min(Math.max(400.0, total / 3), 800.0).toLong())
+    }
+
+    private fun scrollFling(distanceX: Float, distanceY: Float, durationMs: Long) {
+        ValueAnimator.ofFloat(0f, 1.0f).apply {
+            duration = durationMs
+            interpolator = DecelerateInterpolator()
+            var oldValueX = 0f
+            var oldValueY = 0f
+            addUpdateListener { animation -> run {
+                val value = animation.animatedValue as Float
+                onScrollBy(distanceX * value - oldValueX, distanceY * value - oldValueY)
+                oldValueX = distanceX * value
+                oldValueY = distanceY * value
+            } }
+            start()
         }
     }
 }
