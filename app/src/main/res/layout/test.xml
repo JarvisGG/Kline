@@ -8,14 +8,13 @@
         android:id="@+id/weather"
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
-
-        <Button
-            android:layout_width="70dp"
-            android:layout_height="70dp"
-            android:layout_margin="100dp"
-            android:text="1"/>
-
     </jarvis.com.library.ui.KLineCharView>
+
+    <Button
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_margin="100dp"
+        android:text="1"/>
 
     <!--<jarvis.com.kline.ZoomImageView-->
         <!--android:layout_width="match_parent"-->

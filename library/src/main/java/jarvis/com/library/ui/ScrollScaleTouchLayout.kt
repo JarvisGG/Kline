@@ -39,11 +39,12 @@ open class ScrollScaleTouchLayout: FrameLayout {
     private val viewConfiguration by lazy { ViewConfiguration.get(context) }
 
     protected lateinit var originRect: Rect
+    protected var mLastRectF: RectF = RectF()
 
-    private var mLastFocusX: Float = 0.toFloat()
-    private var mLastFocusY: Float = 0.toFloat()
-    private var mDownFocusX: Float = 0.toFloat()
-    private var mDownFocusY: Float = 0.toFloat()
+    private var mLastFocusX: Float = 0f
+    private var mLastFocusY: Float = 0f
+    private var mDownFocusX: Float = 0f
+    private var mDownFocusY: Float = 0f
 
     private var mScaleMax = 4f
     private var mScaleMin = 1f
@@ -52,6 +53,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
 
     private var isCheckLeftAndRight: Boolean = false
     private var isCheckTopAndBottom: Boolean = false
+
 
     constructor(c:Context): this(c,null)
 
@@ -100,13 +102,10 @@ open class ScrollScaleTouchLayout: FrameLayout {
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        val array = getActionAndPointerIndex(ev)
-        val centerRectF = getMatrixRectF()
-
-            val realX = (ev.getX(array[1]) + Math.abs(centerRectF.left)) / getScale()
-            val realY = (ev.getY(array[1]) + Math.abs(centerRectF.top)) / getScale()
-            ev.setLocation(realX, realY)
-
+//        var centerRectF = getMatrixRectF()
+//        val realX = (ev.getX() + Math.abs(centerRectF.left)) / getScale()
+//        val realY = (ev.getY() + Math.abs(centerRectF.top)) / getScale()
+//        ev.setLocation(realX, realY)
         return super.dispatchTouchEvent(ev)
     }
 
