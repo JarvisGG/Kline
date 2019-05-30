@@ -8,7 +8,6 @@ import android.graphics.Rect
 import android.graphics.RectF
 import android.support.annotation.IntDef
 import android.util.AttributeSet
-import android.util.Log
 import android.view.*
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
@@ -78,7 +77,6 @@ open class ScrollScaleTouchLayout: FrameLayout {
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
-        Log.e("onDraw", "-------------> done")
         canvas?.concat(mMatrix)
     }
 
@@ -87,7 +85,33 @@ open class ScrollScaleTouchLayout: FrameLayout {
         originRect.set(0, 0, width, height)
     }
 
+    private fun getActionAndPointerIndex(event: MotionEvent): IntArray {
+        var action = event.action
+        var ptrIndex = 0
+        if (event.pointerCount > 1) {
+            val ptrId = (action and MotionEvent.ACTION_POINTER_INDEX_MASK).ushr(MotionEvent.ACTION_POINTER_INDEX_SHIFT)
+            action = action and MotionEvent.ACTION_MASK
+            if (action in 5..6) {
+                action -= 5
+            }
+            ptrIndex = event.findPointerIndex(ptrId)
+        }
+        return intArrayOf(action, ptrIndex)
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        val array = getActionAndPointerIndex(ev)
+        val centerRectF = getMatrixRectF()
+
+            val realX = (ev.getX(array[1]) + Math.abs(centerRectF.left)) / getScale()
+            val realY = (ev.getY(array[1]) + Math.abs(centerRectF.top)) / getScale()
+            ev.setLocation(realX, realY)
+
+        return super.dispatchTouchEvent(ev)
+    }
+
     override fun onTouchEvent(ev: MotionEvent): Boolean {
+
         velocityTracker?.addMovement(ev)
 
         val pointerUp = ev.action and MotionEvent.ACTION_MASK == MotionEvent.ACTION_POINTER_UP

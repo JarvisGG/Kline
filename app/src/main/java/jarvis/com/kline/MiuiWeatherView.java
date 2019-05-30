@@ -430,6 +430,20 @@ public class MiuiWeatherView extends View {
         canvas.restore();
     }
 
+    public static int[] GetTouchActionAndPointerIndex(MotionEvent event) {
+        int action = event.getAction();
+        int ptrIndex = 0;
+        if (event.getPointerCount() > 1) {
+            int ptrId = (action & MotionEvent.ACTION_POINTER_ID_MASK) >>> MotionEvent.ACTION_POINTER_ID_SHIFT;
+            action = action & MotionEvent.ACTION_MASK;
+            if (action < 7 && action > 4) {
+                action = action - 5;
+            }
+            ptrIndex = event.findPointerIndex(ptrId);
+        }
+        return new int[] { action, ptrIndex };
+    }
+
     /**
      * 画天气图标和它下方文字
      * 若相邻虚线都在屏幕内，图标的x位置即在两虚线的中间
