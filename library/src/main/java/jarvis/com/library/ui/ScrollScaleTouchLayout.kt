@@ -39,7 +39,6 @@ open class ScrollScaleTouchLayout: FrameLayout {
     private val viewConfiguration by lazy { ViewConfiguration.get(context) }
 
     protected lateinit var originRect: Rect
-    protected var mLastRectF: RectF = RectF()
 
     private var mLastFocusX: Float = 0f
     private var mLastFocusY: Float = 0f
