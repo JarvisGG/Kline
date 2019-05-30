@@ -7,14 +7,15 @@
     <jarvis.com.library.ui.KLineCharView
         android:id="@+id/weather"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
-    </jarvis.com.library.ui.KLineCharView>
+        android:layout_height="match_parent">
 
-    <Button
-        android:layout_width="70dp"
-        android:layout_height="70dp"
-        android:layout_margin="100dp"
-        android:text="1"/>
+        <Button
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:layout_margin="100dp"
+            android:text="Jarvis"/>
+
+    </jarvis.com.library.ui.KLineCharView>
 
     <!--<jarvis.com.kline.ZoomImageView-->
         <!--android:layout_width="match_parent"-->

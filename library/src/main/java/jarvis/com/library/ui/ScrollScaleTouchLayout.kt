@@ -100,12 +100,18 @@ open class ScrollScaleTouchLayout: FrameLayout {
         return intArrayOf(action, ptrIndex)
     }
 
-    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-//        var centerRectF = getMatrixRectF()
-//        val realX = (ev.getX() + Math.abs(centerRectF.left)) / getScale()
-//        val realY = (ev.getY() + Math.abs(centerRectF.top)) / getScale()
-//        ev.setLocation(realX, realY)
-        return super.dispatchTouchEvent(ev)
+    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+        return true
+    }
+
+    private fun getDispatchEvent(ev: MotionEvent, ac: Int): MotionEvent = run {
+        val centerRectF = getMatrixRectF()
+        val realX = (ev.getX() + Math.abs(centerRectF.left)) / getScale()
+        val realY = (ev.getY() + Math.abs(centerRectF.top)) / getScale()
+        MotionEvent.obtain(ev).apply {
+            action = ac
+            setLocation(realX, realY)
+        }
     }
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
@@ -131,6 +137,24 @@ open class ScrollScaleTouchLayout: FrameLayout {
             focusY = sumY / this
         }
 
+        val canMove = isMoveAction(focusX - mDownFocusX, focusY - mDownFocusY).apply {
+            for (index in 0 until childCount) {
+                getDispatchEvent(ev, if (this) { MotionEvent.ACTION_CANCEL } else { ev.action }).apply {
+                    val child = getChildAt(index)
+                    val param = child.layoutParams as FrameLayout.LayoutParams
+                    if (x >= param.leftMargin.toFloat() &&
+                            y >= param.topMargin.toFloat() &&
+                            x <= param.leftMargin.toFloat() + child.width &&
+                            y <= param.topMargin.toFloat() + child.height) {
+                        offsetLocation(param.leftMargin.toFloat(), param.topMargin.toFloat())
+                        child.dispatchTouchEvent(this)
+                    }
+                    recycle()
+                }
+
+            }
+        }
+
         if (ev.pointerCount > 1) {
             scaleGestureDetector.onTouchEvent(ev)
             if (scaleGestureDetector.isInProgress) {
@@ -151,7 +175,6 @@ open class ScrollScaleTouchLayout: FrameLayout {
                 if (velocityTracker == null) {
                     return false
                 }
-
                 mLastFocusX = focusX
                 mDownFocusX = mLastFocusX
                 mLastFocusY = focusY
@@ -191,9 +214,9 @@ open class ScrollScaleTouchLayout: FrameLayout {
             MotionEvent.ACTION_MOVE -> {
                 val deltaX = focusX - mLastFocusX
                 val deltaY = focusY - mLastFocusY
-//                if (isMoveAction(deltaX, deltaY)) {
+                if (canMove) {
                     onScrollBy(deltaX, deltaY)
-//                }
+                }
                 mLastFocusX = focusX
                 mLastFocusY = focusY
                 return true
@@ -349,12 +372,14 @@ open class ScrollScaleTouchLayout: FrameLayout {
             interpolator = DecelerateInterpolator()
             var oldValueX = 0f
             var oldValueY = 0f
-            addUpdateListener { animation -> run {
-                val value = animation.animatedValue as Float
-                onScrollBy(distanceX * value - oldValueX, distanceY * value - oldValueY)
-                oldValueX = distanceX * value
-                oldValueY = distanceY * value
-            } }
+            addUpdateListener {
+                animation -> run {
+                    val value = animation.animatedValue as Float
+                    onScrollBy(distanceX * value - oldValueX, distanceY * value - oldValueY)
+                    oldValueX = distanceX * value
+                    oldValueY = distanceY * value
+                }
+            }
             start()
         }
     }
