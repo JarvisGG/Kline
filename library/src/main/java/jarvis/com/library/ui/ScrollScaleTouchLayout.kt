@@ -25,10 +25,14 @@ open class ScrollScaleTouchLayout: FrameLayout {
         companion object {
             const val HORIZONTAL = 0x001
             const val VERTICAL = -0x001
+            const val ALL = 0x000
         }
     }
 
-    var mDirection = Direction.HORIZONTAL
+    companion object {
+        const val SCALE = "scale"
+        const val TRANSLATE = "translate"
+    }
 
     private val onScaleGestureListener by lazy { ScaleGestureListener() }
 
@@ -106,8 +110,8 @@ open class ScrollScaleTouchLayout: FrameLayout {
 
     private fun getDispatchEvent(ev: MotionEvent, ac: Int): MotionEvent = run {
         val centerRectF = getMatrixRectF()
-        val realX = (ev.getX() + Math.abs(centerRectF.left)) / getScale()
-        val realY = (ev.getY() + Math.abs(centerRectF.top)) / getScale()
+        val realX = (ev.getX() + Math.abs(centerRectF.left)) / run { if (getDirection() == Direction.VERTICAL) 1f else getScale() }
+        val realY = (ev.getY() + Math.abs(centerRectF.top)) / run { if (getDirection() == Direction.HORIZONTAL) 1f else getScale() }
         MotionEvent.obtain(ev).apply {
             action = ac
             setLocation(realX, realY)
@@ -270,7 +274,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
             isCheckTopAndBottom = false
             y = 0f
         }
-        mMatrix.postTranslate(x, y)
+        post(TRANSLATE, x, y)
         checkBorderWhenTranslate()
         invalidate()
     }
@@ -293,7 +297,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
         if (rectF.right < width && isCheckLeftAndRight) {
             deltaX = width - rectF.right
         }
-        mMatrix.postTranslate(deltaX, deltaY)
+        post(TRANSLATE, deltaX, deltaY)
     }
 
     private fun onScaleChange(detector: ScaleGestureDetector) {
@@ -306,7 +310,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
             if (scale * scaleFactor > mScaleMax) {
                 scaleFactor = mScaleMax / scale
             }
-            mMatrix.postScale(scaleFactor, scaleFactor, detector.focusX, detector.focusY)
+            post(SCALE, scaleFactor, scaleFactor, detector.focusX, detector.focusY)
             checkBorderAndCenterWhenScale()
             invalidate()
         }
@@ -336,7 +340,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
         if (rectF.height() < height) {
             deltaY = height / 2f - rectF.bottom + rectF.height() / 2
         }
-        mMatrix.postTranslate(deltaX, deltaY)
+        post(TRANSLATE, deltaX, deltaY)
     }
 
     private fun getScale(): Float {
@@ -349,6 +353,43 @@ open class ScrollScaleTouchLayout: FrameLayout {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
             onScaleChange(detector)
             return true
+        }
+    }
+
+    private fun post(type: String, x: Float, y: Float, focusX: Float = 0f, focusY: Float = 0f) {
+        post(type, x, y, {_, _ -> getDX(type, x) }, {_, _ -> getDY(type, y) }, focusX, focusY)
+    }
+
+    private fun post(type: String, x: Float, y: Float, fx: ((String, Float) -> Float), fy: ((String, Float) -> Float), focusX: Float = 0f,focusY: Float = 0f) {
+        when (type) {
+            SCALE -> mMatrix.postScale(fx.invoke(type, x), fy.invoke(type, y), focusX, focusY)
+            TRANSLATE -> mMatrix.postTranslate(fx.invoke(type, x), fy.invoke(type, y))
+        }
+    }
+
+    protected open fun getDirection(): Int {
+        return Direction.ALL
+    }
+
+    private fun getDX(type: String, x: Float): Float = run {
+        when (getDirection()) {
+            Direction.VERTICAL -> when (type) {
+                SCALE -> 1f
+                TRANSLATE -> 0f
+                else -> x
+            }
+            else -> x
+        }
+    }
+
+    private fun getDY(type: String, y: Float): Float = run {
+        when (getDirection()) {
+            Direction.HORIZONTAL -> when (type) {
+                SCALE -> 1f
+                TRANSLATE -> 0f
+                else -> x
+            }
+            else -> y
         }
     }
 
