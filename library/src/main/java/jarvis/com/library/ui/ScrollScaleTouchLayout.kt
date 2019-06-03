@@ -87,7 +87,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        originRect.set(0, 0, width, height)
+        originRect.set(0, 0, w, h)
     }
 
     private fun getActionAndPointerIndex(event: MotionEvent): IntArray {
@@ -343,7 +343,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
         post(TRANSLATE, deltaX, deltaY)
     }
 
-    private fun getScale(): Float {
+    open fun getScale(): Float {
         val values = FloatArray(9)
         mMatrix.getValues(values)
         return values[Matrix.MSCALE_X]
@@ -357,7 +357,7 @@ open class ScrollScaleTouchLayout: FrameLayout {
     }
 
     private fun post(type: String, x: Float, y: Float, focusX: Float = 0f, focusY: Float = 0f) {
-        post(type, x, y, {_, _ -> getDX(type, x) }, {_, _ -> getDY(type, y) }, focusX, focusY)
+        post(type, x, y, ::getDX, ::getDY, focusX, focusY)
     }
 
     private fun post(type: String, x: Float, y: Float, fx: ((String, Float) -> Float), fy: ((String, Float) -> Float), focusX: Float = 0f,focusY: Float = 0f) {
